@@ -4,6 +4,9 @@
 
     See global.jelly for a general discussion about jelly script.
     -->
+    <f:entry title="Enabled" help="${rootURL}/plugin/seleniumhq/help-builder-testEnabled.html">
+        <f:checkbox field="testEnabled" checked="${instance.testEnabled}" default="true" />
+    </f:entry>
     <f:entry title="browser" help="${rootURL}/plugin/seleniumhq/help-builder-browser.html">
         <f:textbox field="browser" clazz="required" checkMessage="${%mandatory.browser}"/>
     </f:entry>

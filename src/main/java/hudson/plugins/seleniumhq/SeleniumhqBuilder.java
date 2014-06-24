@@ -45,17 +45,30 @@ public class SeleniumhqBuilder extends Builder {
     private final String suiteFile;
     private final String resultFile;
     private final String other;
+    private final boolean testEnabled;
+
 
     @DataBoundConstructor
     public SeleniumhqBuilder(String browser, String startURL, String suiteFile, String resultFile,
-            String other) {
+            String other, boolean testEnabled) {
         this.browser = browser;
         this.startURL = startURL;
         this.suiteFile = suiteFile;
         this.resultFile = resultFile;
         this.other = other;
+        this.testEnabled = testEnabled;
     }
 
+    //Left this call in to satisfy the tests. Did not change the tests.
+    public SeleniumhqBuilder(String browser, String startURL, String suiteFile, String resultFile,
+                             String other) {
+        this.browser = browser;
+        this.startURL = startURL;
+        this.suiteFile = suiteFile;
+        this.resultFile = resultFile;
+        this.other = other;
+        this.testEnabled = true;
+    }
     /**
      * We'll use this from the <tt>config.jelly</tt>.
      */
@@ -92,6 +105,13 @@ public class SeleniumhqBuilder extends Builder {
     }
 
     /**
+     * We'll use this from the <tt>config.jelly</tt>.
+     */
+    public boolean getTestEnabled() {
+        return testEnabled;
+    }
+
+    /**
      * Check if the suiteFile is a URL
      * 
      * @return true if the suiteFile is a valid url else return false
@@ -113,7 +133,7 @@ public class SeleniumhqBuilder extends Builder {
      * @throws IOException 
      */
     public boolean isFileSuiteFile(AbstractBuild<?,?> build, Launcher launcher) throws IOException, InterruptedException {
-        FilePath suiteFilePath = new FilePath(build.getWorkspace(), this.suiteFile);               
+        FilePath suiteFilePath = new FilePath(build.getWorkspace(), this.suiteFile);
         if (suiteFilePath.exists())
         {
         	return suiteFilePath.isDirectory() == false;
@@ -140,6 +160,18 @@ public class SeleniumhqBuilder extends Builder {
             listener.error("Please configure the Selenium Remote Control htmlSuite Runner in admin of hudson");
             build.setResult(Result.FAILURE);
             return false;
+        }
+
+        //if test is not enabled we should mark it as NOT BUILT (rather than success or failure
+        if(!this.getTestEnabled()) {
+            listener.getLogger().println("---------------");
+            listener.getLogger().println("SKIPPING: Test Suite. '" + this.getSuiteFile() + "' was marked as not enabled");
+            listener.getLogger().println("---------------");
+            //Let the other surrounding tests determine the build result
+            //build.setResult(Result.NOT_BUILT);
+
+            //return build so build doesn't get aborted & other tests will get run
+            return true;
         }
 
         // -------------------------------
@@ -188,7 +220,7 @@ public class SeleniumhqBuilder extends Builder {
         	 {
         	     File localWorkspace = new File(build.getRootDir(), "workspace");
         	     File tempSuiteLocal = localWorkspace.createTempFile("tempHtmlSuite", "html");
-        	     
+
         		 listener.getLogger().println("Try downloading suite file on master");
         		 listener.getLogger().println("    from url : " + this.suiteFile );
         		 listener.getLogger().println("    to file  : " + tempSuiteLocal.getPath());
@@ -214,9 +246,9 @@ public class SeleniumhqBuilder extends Builder {
                  return false;         	 
         	 }
          }
-         else 
+         else
          {
-	         // The suiteFile it is a unsuported type
+                // The suiteFile it is a unsuported type
 	         listener.error("The suiteFile is not a file or an url ! Check your build configuration.");
 	         build.setResult(Result.FAILURE);
 	         return false;
@@ -242,7 +274,7 @@ public class SeleniumhqBuilder extends Builder {
         cmd.add(this.getStartURL());
         cmd.add(suiteFile);
         cmd.add(resultFile);
-                
+
         try 
         {
                 String javaCmdString = "";
