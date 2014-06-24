@@ -246,6 +246,12 @@ public class SeleniumhqBuilder extends Builder {
                  return false;         	 
         	 }
          }
+         //see if we've got a jenkins variable. if so just pass it along
+         else if (this.suiteFile.startsWith("$"))
+         {
+             listener.getLogger().println("Suite File Looks Like a Parameter: "+ this.suiteFile);
+             suiteFile = this.suiteFile;
+         }
          else
          {
                 // The suiteFile it is a unsuported type
